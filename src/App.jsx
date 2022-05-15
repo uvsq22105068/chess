@@ -11,10 +11,10 @@ export default function App() {
     const [user, loading, error] = useAuthState(auth)
 
     if (loading) {
-        return 'loading ...'
+        return 'Now loading ...'
     }
     if (error) {
-        return 'There was an error'
+        return 'Error, please try again'
     }
     if (!user) {
         return <UserForm />

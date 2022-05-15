@@ -1,5 +1,4 @@
 import { Chess } from 'chess.js'
-import { BehaviorSubject } from 'rxjs'
 import { map } from 'rxjs/operators'
 import { auth } from './firebase'
 import { fromRef } from 'rxfire/firestore'
@@ -13,61 +12,42 @@ export let gameSubject
 
 export async function initGame(gameRefFb) {
     const { currentUser } = auth
-    if (gameRefFb) {
-        gameRef = gameRefFb
-        const initialGame = await gameRefFb.get().then(doc => doc.data())
-        if (!initialGame) {
-            return 'notfound'
-        }
-        const creator = initialGame.members.find(m => m.creator === true)
+    gameRef = gameRefFb
+    const initialGame = await gameRefFb.get().then(doc => doc.data())
+    if (!initialGame) { return 'notfound' }
+    const creator = initialGame.members.find(m => m.creator === true)
 
-        if (initialGame.status === 'waiting' && creator.uid !== currentUser.uid) {
-            const currUser = {
-                uid: currentUser.uid,
-                name: localStorage.getItem('userName'),
-                piece: creator.piece === 'w' ? 'b' : 'w'
+    if (initialGame.status === 'waiting' && creator.uid !== currentUser.uid) {
+        const currUser = {
+            uid: currentUser.uid,
+            name: localStorage.getItem('userName'),
+            piece: creator.piece === 'w' ? 'b' : 'w'
+        }
+        const updatedMembers = [...initialGame.members, currUser]
+        await gameRefFb.update({ members: updatedMembers, status: 'ready' })
+    } else if (!initialGame.members.map(m => m.uid).includes(currentUser.uid)) { return 'intruder' }
+    chess.reset()
+
+    gameSubject = fromRef(gameRefFb).pipe(
+        map(gameDoc => {
+            const game = gameDoc.data()
+            const { pendingPromotion, gameData, ...restOfGame } = game
+            member = game.members.find(m => m.uid === currentUser.uid)
+            const oponent = game.members.find(m => m.uid !== currentUser.uid)
+            if (gameData) { chess.load(gameData) }
+            const isGameOver = chess.game_over()
+            return {
+                board: chess.board(),
+                pendingPromotion,
+                isGameOver,
+                position: member.piece,
+                member,
+                oponent,
+                result: isGameOver ? getGameResult() : null,
+                ...restOfGame
             }
-            const updatedMembers = [...initialGame.members, currUser]
-            await gameRefFb.update({ members: updatedMembers, status: 'ready' })
-
-        } else if (!initialGame.members.map(m => m.uid).includes(currentUser.uid)) {
-            return 'intruder'
-        }
-        chess.reset()
-
-        gameSubject = fromRef(gameRefFb).pipe(
-            map(gameDoc => {
-                const game = gameDoc.data()
-                const { pendingPromotion, gameData, ...restOfGame } = game
-                member = game.members.find(m => m.uid === currentUser.uid)
-                const oponent = game.members.find(m => m.uid !== currentUser.uid)
-                if (gameData) {
-                    chess.load(gameData)
-                }
-                const isGameOver = chess.game_over()
-                return {
-                    board: chess.board(),
-                    pendingPromotion,
-                    isGameOver,
-                    position: member.piece,
-                    member,
-                    oponent,
-                    result: isGameOver ? getGameResult() : null,
-                    ...restOfGame
-                }
-            })
-        )
-
-    } else {
-        gameRef = null
-        gameSubject = new BehaviorSubject()
-        const savedGame = localStorage.getItem('savedGame')
-        if (savedGame) {
-            chess.load(savedGame)
-        }
-        updateGame()
-    }
-
+        })
+    )
 }
 
 export async function resetGame() {
@@ -89,34 +69,23 @@ export function handleMove(from, to) {
         pendingPromotion = { from, to, color: promotions[0].color }
         updateGame(pendingPromotion)
     }
-
-    if (!pendingPromotion) {
-        move(from, to)
-    }
+    if (!pendingPromotion) { move(from, to) }
 }
 
 
 export function move(from, to, promotion) {
     let tempMove = { from, to }
-    if (promotion) {
-        tempMove.promotion = promotion
-    }
+    if (promotion) { tempMove.promotion = promotion }
     console.log({ tempMove, member }, chess.turn())
     if (gameRef) {
         if (member.piece === chess.turn()) {
             const legalMove = chess.move(tempMove)
-            if (legalMove) {
-                updateGame()
-            }
+            if (legalMove) { updateGame() }
         }
     } else {
         const legalMove = chess.move(tempMove)
-
-        if (legalMove) {
-            updateGame()
-        }
+        if (legalMove) { updateGame() }
     }
-
 }
 
 async function updateGame(pendingPromotion, reset) {
@@ -124,9 +93,7 @@ async function updateGame(pendingPromotion, reset) {
     if (gameRef) {
         const updatedData = { gameData: chess.fen(), pendingPromotion: pendingPromotion || null }
         console.log({ updateGame })
-        if (reset) {
-            updatedData.status = 'over'
-        }
+        if (reset) { updatedData.status = 'over' }
         await gameRef.update(updatedData)
     } else {
         const newGame = {
@@ -139,9 +106,8 @@ async function updateGame(pendingPromotion, reset) {
         localStorage.setItem('savedGame', chess.fen())
         gameSubject.next(newGame)
     }
-
-
 }
+
 function getGameResult() {
     if (chess.in_checkmate()) {
         const winner = chess.turn() === "w" ? 'BLACK' : 'WHITE'

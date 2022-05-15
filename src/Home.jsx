@@ -20,7 +20,7 @@ export default function Home() {
         const game = {
             status: 'waiting',
             members: [member],
-            gameId: `${Math.random().toString(36).substr(2, 9)}_${Date.now()}`
+            gameId: `${Math.random().toString(36)}_${Date.now()}`
         }
         await db.collection('games').doc(game.gameId).set(game)
         navigate(`/game/${game.gameId}`)
@@ -35,12 +35,10 @@ export default function Home() {
                             <div className="content">
                                 Please {localStorage.getItem('userName')}, select the piece you want to start with
                             </div>
-
                         </div>
                         <footer className="card-footer">
                             {newGameOptions.map(({ label, value }) => (
-                                <span className="card-footer-item pointer" key={value}
-                                    onClick={() => startOnlineGame(value)}>
+                                <span className="card-footer-item pointer" key={value} onClick={() => startOnlineGame(value)}>
                                     {label}
                                 </span>
                             ))}

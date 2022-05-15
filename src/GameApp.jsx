@@ -17,10 +17,11 @@ function GameApp() {
   const { id } = useParams()
   const navigate = useNavigate()
   const sharebleLink = window.location.href
+
   useEffect(() => {
     let subscribe
     async function init() {
-      const res = await initGame(id !== 'local' ? db.doc(`games/${id}`) : null)
+      const res = await initGame(db.doc(`games/${id}`))
       setInitResult(res)
       setLoading(false)
       if (!res) {
@@ -32,13 +33,9 @@ function GameApp() {
           setStatus(game.status)
           setGame(game)
         })
-
       }
-
     }
-
     init()
-
     return () => subscribe && subscribe.unsubscribe()
   }, [id])
 
