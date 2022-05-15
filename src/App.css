@@ -3,14 +3,36 @@
   padding: 0;
 }
 
-.container {
+.app-container {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
   background-color: rgb(34, 34, 34);
 }
+.user-form {
+  margin-top: 30px !important;
+  max-width: 800px;
+  margin: auto;
+}
 
+.home {
+  min-height: 100vh;
+}
+.home-columns {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.pointer {
+  cursor: pointer;
+}
+.share-game {
+  position: absolute;
+  width: 500px;
+  bottom: 0;
+  left: 0;
+}
 .board-container {
   width: 600px;
   height: 600px;
@@ -26,6 +48,7 @@
 .square {
   width: 12.5%;
   height: 12.5%;
+  border: 1px solid black;
 }
 
 .promote-square {
@@ -34,13 +57,11 @@
 }
 
 .square-black {
-  background: #aaa;
-  border: medium solid black;
+  background: #aaa
 }
 
 .square-white {
-  background: #eee;
-  border: medium solid black;
+  background: #eee
 }
 
 .board-square {
@@ -84,4 +105,37 @@
   border: 2px solid white;
   border-radius: 10px;
 
+}
+
+.modal-content {
+  margin: 0;
+  position: absolute;
+  top: 30%;
+  left: 30%;
+}
+
+h1 {
+  color: white;
+  text-align: center;
+}
+
+.start-button {
+  align-items: center;
+}
+
+.start-button {
+  padding: 7px 1%;
+  margin-left: 47.75%;
+  text-align: center;
+  color: #edf0f1;
+  background-color: rgba(0,136,247,1);
+  border: none;
+  transition: all 0.3s ease 0s;
+  border-radius: 50px;
+  height: 30px;
+  width: 60px;
+}
+
+.start-button:hover {
+  background-color: rgba(0,136,247,0.6);
 }
